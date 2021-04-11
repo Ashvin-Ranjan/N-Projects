@@ -1,0 +1,38 @@
+// This file is for functions that are fixes for missing things in the current version that is stated, these will most likely be depricated in the future
+
+import request
+import json
+
+// 1.2.1
+let pub enumerate = [[t] l:list[t]] -> list[(int, t)] {
+	return range(0, len(l), 1) |>
+		filterMap([i:int] -> maybe[(int, t)] {
+			if let <yes v> = l |> itemAt(i) {
+				return yes((i, v))
+			}
+			return none
+		})
+} 
+
+// 1.2.1
+let pub setItem = [[t] index:int value:t l:list[t]] -> list[t] {
+	return range(0, len(l), 1)
+							 |> filterMap([i:int] -> maybe[t] {
+							 		return if i == index {
+							 			yes(value)
+							 		} else {
+							 			l |> itemAt(i)
+							 		}
+							 	})
+}
+
+// 1.2.1
+let pub getCurrentTime = [] -> cmd[int] {
+	let value = request.get("https://gettime-1.asra.repl.co", mapFrom([("", "")]))!
+
+	if let <number epoch> = value.return {
+		return round(epoch)
+	} else {
+		return 1
+	}
+}

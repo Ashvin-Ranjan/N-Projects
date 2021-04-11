@@ -1,0 +1,109 @@
+// This is a simple minesweeper project in N
+// Bugs:
+//  - Sometimes mines can be placed in the same spot (kinda fixed)
+
+let legacy = imp "./legacy.n"
+let random = imp "./.mod/random/random.n"
+
+let BOARDSIZE = 7
+let MINECOUNT = 10
+let ADJACENT:list[int] = [0-BOARDSIZE - 1, 0-BOARDSIZE, 0-BOARDSIZE + 1, -1, 1, BOARDSIZE - 1, BOARDSIZE, BOARDSIZE + 1] // All things to add to the index to get the adjacent squares
+let SPECIALCASES:list[list[int]] = [[0-BOARDSIZE - 1, 0-BOARDSIZE, -1, BOARDSIZE - 1, BOARDSIZE], [0-BOARDSIZE, 0-BOARDSIZE + 1, 1, BOARDSIZE, BOARDSIZE + 1]] // Edge cases to stop weird looping first is right edge second is left edge
+
+let board:list[int] = range(0, BOARDSIZE * BOARDSIZE, 1)
+													   |> filterMap([_: int] -> maybe[int] {
+															return yes(0)
+														}) // This just creates a list of 0s
+
+
+let printBoard = [] -> () {
+	let out = ""
+	for (i, e in legacy.enumerate(board)) {
+		if i % BOARDSIZE == 0 && i /= 0 {
+			print(out)
+			var out = (if e /= -1 {intInBase10(e)} else {"-"})
+		} else {
+			var out = out + (if e /= -1 {intInBase10(e)} else {"-"})
+		}
+	}
+
+	print(out)
+}
+
+let getDiscord = [i:int] -> str {
+	if i == -1 {
+		return "||" + intCode(128165) + "||"
+	}
+
+	return "||" + intInBase10(i) + intCode(65039) + intCode(8419) + "||"
+}
+
+let printDiscord = [] -> () {
+	let out = ""
+	for (i, e in legacy.enumerate(board)) {
+		if i % BOARDSIZE == 0 && i /= 0 {
+			print(out)
+			var out = getDiscord(e)
+		} else {
+			var out = out + getDiscord(e)
+		}
+	}
+
+	print(out)
+}
+
+let run = [] -> cmd[()] {
+	let epoch = legacy.getCurrentTime()!
+
+	let rand = random.Random(16807, floor(2^31) - 1, epoch)
+
+	let mines:list[int] = []
+
+	for (i in range(0, MINECOUNT, 1)) {
+		// Get the index of the time
+		let index = floor(rand.getNext() * BOARDSIZE^2)
+		
+		if (itemAt(index, board) |> default(0)) /= -1 { // does a really bad way of stopping duplicates from messing with things
+			// Set that to -1
+			var board = board
+							|> legacy.setItem(index, -1)
+
+			var mines = append(index, mines) // Store the location of the mine
+		}
+	}
+
+	// This increases all of the numbers if they are near a mine
+	for (mine in mines) {
+		let adjacentList = ADJACENT
+
+		// This code is for stopping looping when checking adjacents on the right and left edge
+		if (mine + 1) % BOARDSIZE == 0 {
+			var adjacentList = SPECIALCASES
+										  |> itemAt(0)
+										  |> default(ADJACENT)
+		} // else if does not work here for some reason
+		if mine % BOARDSIZE == 0 {
+			var adjacentList = SPECIALCASES
+										  |> itemAt(1)
+										  |> default(ADJACENT)
+		}
+
+
+		// Get all adjacent squares and add one if it is not a mine
+		for (s in adjacentList) {
+			let square = itemAt(mine + s, board)
+			if let <yes adjacentSquare> = square { // Check if it exists
+				if adjacentSquare /= -1 { // Check if it is not a mine
+					var board = board
+							|> legacy.setItem(mine + s, adjacentSquare + 1)
+				}
+			}
+		}
+	}
+
+	printBoard()
+	print("")
+	printDiscord()
+}
+
+let pub main = run()
