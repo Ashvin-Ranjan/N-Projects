@@ -7,8 +7,8 @@ let random = imp "./.mod/random/random.n"
 
 let BOARDSIZE = 7
 let MINECOUNT = 10
-let ADJACENT:list[int] = [0-BOARDSIZE - 1, 0-BOARDSIZE, 0-BOARDSIZE + 1, -1, 1, BOARDSIZE - 1, BOARDSIZE, BOARDSIZE + 1] // All things to add to the index to get the adjacent squares
-let SPECIALCASES:list[list[int]] = [[0-BOARDSIZE - 1, 0-BOARDSIZE, -1, BOARDSIZE - 1, BOARDSIZE], [0-BOARDSIZE, 0-BOARDSIZE + 1, 1, BOARDSIZE, BOARDSIZE + 1]] // Edge cases to stop weird looping first is right edge second is left edge
+let ADJACENT:list[int] = [-BOARDSIZE - 1, -BOARDSIZE, -BOARDSIZE + 1, -1, 1, BOARDSIZE - 1, BOARDSIZE, BOARDSIZE + 1] // All things to add to the index to get the adjacent squares
+let SPECIALCASES:list[list[int]] = [[-BOARDSIZE - 1, -BOARDSIZE, -1, BOARDSIZE - 1, BOARDSIZE], [-BOARDSIZE, -BOARDSIZE + 1, 1, BOARDSIZE, BOARDSIZE + 1]] // Edge cases to stop weird looping first is right edge second is left edge
 
 let board:list[int] = range(0, BOARDSIZE * BOARDSIZE, 1)
 													   |> filterMap([_: int] -> maybe[int] {
@@ -32,7 +32,7 @@ let printBoard = [] -> () {
 
 let getDiscord = [i:int] -> str {
 	if i == -1 {
-		return "||" + intCode(128165) + "||"
+		return "||" + \{💥} + "||"
 	}
 
 	return "||" + intInBase10(i) + intCode(65039) + intCode(8419) + "||"
@@ -55,7 +55,7 @@ let printDiscord = [] -> () {
 let run = [] -> cmd[()] {
 	let epoch = legacy.getCurrentTime()!
 
-	let rand = random.Random(16807, floor(2^31) - 1, epoch)
+	let rand = random.createRandom(epoch)
 
 	let mines:list[int] = []
 
@@ -81,8 +81,7 @@ let run = [] -> cmd[()] {
 			var adjacentList = SPECIALCASES
 										  |> itemAt(0)
 										  |> default(ADJACENT)
-		} // else if does not work here for some reason
-		if mine % BOARDSIZE == 0 {
+		} else if mine % BOARDSIZE == 0 {
 			var adjacentList = SPECIALCASES
 										  |> itemAt(1)
 										  |> default(ADJACENT)
